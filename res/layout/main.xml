@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-
+<!-- 
+// * Copyright: See README file that comes with this distribution
+-->
 <LinearLayout
 xmlns:android="http://schemas.android.com/apk/res/android"
 android:orientation="vertical" 
@@ -7,11 +9,20 @@ android:layout_width="fill_parent"
 android:layout_height="fill_parent"
 >
 
-<ImageButton android:id="@+id/ButtonTest"
-android:layout_width="fill_parent"
-android:layout_height="fill_parent"
+<Button android:id="@+id/ButtonTest"
+android:layout_width="wrap_content"
+android:layout_height="wrap_content"
+android:text="unclicked"
 />
  
+  
+<Spinner 
+android:id="@+id/spinner"
+android:layout_width="fill_parent"
+android:layout_height="wrap_content"
+android:drawSelectorOnTop="true"
+/>
+  
 </LinearLayout>
 
  
