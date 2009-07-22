@@ -1,5 +1,8 @@
-Package: rzr-android-test
-Contact: Philippe Coval <rzr@gna.org>
-URL: http://rzr.online.fr/contact.htm
-Description: Basic test
+Package: rzr-android-test-imf
+Contact: Philippe Coval <philippe.coval@newlc.com>
+URL: http://www.newlc.com
+Description: Test that show that ImageButton does not change their background in IMF
+
+See video.ogv for sample
+
 #eof
