@@ -8,6 +8,7 @@ import java.nio.ByteBuffer;
 
 import android.app.Activity;
 import android.media.AudioFormat;
+import android.media.AudioManager;
 import android.media.AudioRecord;
 import android.media.AudioTrack;
 import android.media.MediaRecorder;
@@ -71,63 +72,86 @@ public class TestActivity extends Activity implements OnClickListener {
 
 	int mChannelConfig = AudioFormat.CHANNEL_CONFIGURATION_MONO;
 	int mAudioFormat = AudioFormat.ENCODING_PCM_16BIT;
+	AudioRecord mAudioRecord = null;
 
 	int mDuration = 1;
+	
+	int mBufferMinSize = 8 * 1024;
 	
 	/** @url: http://en.wikipedia.org/wiki/Sampling_rate#Audio **/
 	static final int[] mSampleRates = { 192000, 176400, 96000, 88200, 50400, 50000,
 			48000, 47250, 44100, 44056, 32000, 24000, 22050, 16000, 11025, 8000 };
-
+		
 	void run() {
 
+		int sampleRate = AudioTrack.getNativeOutputSampleRate(AudioManager.STREAM_SYSTEM);
+		println("NativeOutputSampleRate=" + sampleRate );
+		
 		for (int i = 0; i < mSampleRates.length; i++) {
 
 			println("");
 			try {
 				testSampleRate(mSampleRates[i]);
 
-			} catch (Exception e) {
+			} catch (Exception e) {			
 				println(e);
 				e.printStackTrace();
+				if ( mAudioRecord != null ) {
+					mAudioRecord.release();
+					mAudioRecord = null;
+				}
 			}
 
 		}
 
 	}
 
-	public void testSampleRate(int sampleRate) throws Exception {
-
-		AudioRecord audioRecord = null;
-		
+	public void testSampleRate(int sampleRate) throws Exception {		
 		int sizeInBytes = -1;
 		int minBufferSize = 0;
 		ByteBuffer audioBuffer = null;  
+		int status = 0;
 
-		minBufferSize = AudioTrack.getMinBufferSize(sampleRate, mChannelConfig,
+		mAudioRecord = null;
+
+		minBufferSize = AudioRecord.getMinBufferSize(sampleRate, mChannelConfig,
 				mAudioFormat);
 
 		println("AudioTrack: rate=" + sampleRate + " size=" + minBufferSize);
 
 		sizeInBytes = (int) ( mDuration * minBufferSize);
+		//if ( sizeInBytes < mBufferMinSize ) { sizeInBytes = mBufferMinSize; }
 
-		if (sizeInBytes > 0) {
-			audioBuffer = ByteBuffer.allocateDirect( sizeInBytes );
+		if (sizeInBytes < 0) {
+			throw new Exception("Error: buffersize");
+		}
+		
+		audioBuffer = ByteBuffer.allocateDirect( sizeInBytes );
 			
-			audioRecord = new AudioRecord(MediaRecorder.AudioSource.MIC,
+		mAudioRecord = new AudioRecord(MediaRecorder.AudioSource.MIC,
 					sampleRate, mChannelConfig, mAudioFormat, sizeInBytes);
+		
+		if ( mAudioRecord == null ) {
+			throw new Exception("Error: failed to create AudioRecord");
 		}
 
-		println(audioRecord);
+		println(mAudioRecord);
 		
-		println("state=" + audioRecord.getState() + " ? " + audioRecord.STATE_INITIALIZED );
+		if ( mAudioRecord.getState() != AudioRecord.STATE_INITIALIZED  ) {
+			throw new java.lang.IllegalStateException("Error: AudioRecord not init");
+		}
+		
+		//println("state=" + mAudioRecord.getState() + " ? " + mAudioRecord.STATE_INITIALIZED );
 		// println("rate=" + audioRecord.getSampleRate());
 
-		audioRecord.startRecording();
-		int status = audioRecord.read(audioBuffer, sizeInBytes );
-		println( "read=" + status + " ? " + sizeInBytes );
+		mAudioRecord.startRecording();
+		////java.lang.IllegalStateException: startRecording() called on an uninitialized AudioRecord.
 		
-		audioRecord.stop();
-		audioRecord.release();
+		status =  mAudioRecord.read(audioBuffer, sizeInBytes );
+		println( "read=" + status + " ? " + sizeInBytes );
+
+		mAudioRecord.stop();			
+		
 
 		// TODO playback
 
